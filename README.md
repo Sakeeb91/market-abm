@@ -33,7 +33,7 @@ A flexible and customizable agent-based model of financial markets, simulating i
 
 ## Configuration
 
-Simulation parameters can be easily modified in the `market_abm/config.py` file. Key parameters include:
+Simulation parameters can be easily modified in the `config.py` file. Key parameters include:
 
 * `SIMULATION_STEPS`: Duration of the simulation.
 * `INITIAL_PRICE`: Starting price of the asset.
@@ -56,7 +56,6 @@ Simulation parameters can be easily modified in the `market_abm/config.py` file.
 Execute the main script from the project directory:
 
 ```bash
-cd market_abm
 python run.py
 ```
 
@@ -117,12 +116,12 @@ This model provides a foundation for many extensions:
 
 ## Project Structure
 
-* `market_abm/agents/`: Agent implementations (fundamentalist.py, chartist.py, noise_trader.py, base_agent.py)
-* `market_abm/market/`: Market environment implementation
-* `market_abm/simulation/`: Simulation engine
-* `market_abm/analysis/`: Analysis and visualization tools
-* `market_abm/config.py`: Configuration parameters
-* `market_abm/run.py`: Entry point for running simulations
+* `agents/`: Agent implementations (fundamentalist.py, chartist.py, noise_trader.py, base_agent.py)
+* `market/`: Market environment implementation
+* `simulation/`: Simulation engine
+* `analysis/`: Analysis and visualization tools
+* `config.py`: Configuration parameters
+* `run.py`: Entry point for running simulations
 
 ## License
 
