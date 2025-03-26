@@ -2,6 +2,43 @@
 
 A flexible and customizable agent-based model of financial markets, simulating interactions between fundamentalists, chartists, and noise traders.
 
+## Overview
+
+This project implements an Agent-Based Model (ABM) to simulate the dynamics of a simplified financial market (a single stock). It aims to explore how interactions between heterogeneous agents with different trading strategies can lead to emergent, complex market phenomena like:
+
+*   Price volatility
+*   Bubbles and crashes
+*   Fat-tailed return distributions
+*   Volatility clustering
+
+The model draws inspiration from concepts in **statistical mechanics** and **complex systems**, viewing the market as a system of interacting particles (agents) whose micro-level decisions aggregate into macro-level behavior.
+
+## Core Concepts
+
+*   **Agent-Based Modeling (ABM):** A computational method where autonomous agents interact within an environment according to predefined rules. System-level behavior emerges from these interactions.
+*   **Heterogeneous Agents:** The market is populated by different types of traders:
+    *   **Fundamentalists:** Base decisions on the perceived difference between the market price and a theoretical fundamental value.
+    *   **Chartists (Technical Traders):** Base decisions on patterns and trends observed in past price history (e.g., using moving average crossovers).
+    *   **Noise Traders:** Trade randomly, providing baseline liquidity and noise, often essential for market functioning in ABMs.
+*   **Emergent Phenomena:** Market dynamics (like bubbles) are not explicitly programmed but arise naturally from the collective actions and interactions of the agents.
+*   **Price Formation:** The asset price is updated based on the imbalance between buy and sell orders submitted by the agents in each time step.
+
+## Features
+
+*   Simulation of a single-asset market.
+*   Multiple agent types: Fundamentalists, Chartists, Noise Traders.
+*   Configurable agent parameters (e.g., number, aggressiveness, strategy parameters).
+*   Market environment managing price updates based on order flow.
+*   Simulation engine controlling time steps and agent activation.
+*   Data logging for key metrics (price, volume, agent wealth, agent positions).
+*   Visualization dashboard summarizing simulation results:
+    *   Price and Fundamental Value History
+    *   Trading Volume
+    *   Agent Wealth Over Time
+    *   Total Shares Held by Agent Type
+    *   Returns Distribution
+    *   (Planned/Partially Implemented) Rolling Volatility
+
 ## Setup and Installation
 
 1. **Prerequisites:**
