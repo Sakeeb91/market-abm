@@ -76,41 +76,48 @@ class Fundamentalist(BaseAgent):
         if abs(mispricing) < 0.002 * current_price:
             # If price is very close to fundamental value, hold
             print(f"  Decision: HOLD (mispricing too small)")
-            return 'hold', 0, None
+            action_type, quantity, price = 'hold', 0, None
             
-        # Calculate the desired position change based on mispricing - even more aggressive
-        position_change = int(self.reaction_speed * 3 * mispricing * self.cash / current_price)
-        
-        # Apply position limits - allow using more cash per trade
-        max_new_position = min(
-            int(self.cash / current_price * 0.7),  # Use at most 70% of cash for a single trade
-            market.max_position - self.position  # Position limit
-        )
-        
-        print(f"  Desired position change: {position_change}, Max new position: {max_new_position}")
-        
-        if mispricing > 0:  # Underpriced - buy
-            # Buy signal - ensure at least 1 share if positive signal
-            quantity = max(1, min(position_change, max_new_position))
-            if self.cash < quantity * current_price:
-                print(f"  Decision: HOLD (not enough cash)")
-                return 'hold', 0, None
-                
-            # Calculate buy price with tighter spread to facilitate matching
-            price = current_price * (1 + np.random.uniform(0, 0.002))
-            print(f"  Decision: BUY {quantity} at {price:.2f}")
-            return 'buy', quantity, price
+        else:
+            # Calculate the desired position change based on mispricing - even more aggressive
+            position_change = int(self.reaction_speed * 3 * mispricing * self.cash / current_price)
             
-        else:  # Overpriced - sell
-            # Sell signal - ensure at least 1 share if negative signal and have shares
-            if self.position > 0:
-                # More aggressive selling - willing to sell a larger portion of position
-                quantity = max(1, min(abs(position_change), self.position))
+            # Apply position limits - allow using more cash per trade
+            max_new_position = min(
+                int(self.cash / current_price * 0.7),  # Use at most 70% of cash for a single trade
+                market.max_position - self.position  # Position limit
+            )
+            
+            # Added debug logging for trade limits
+            print(f"  DEBUG: reaction_speed={self.reaction_speed}, cash={self.cash}, max_position={market.max_position}")
+            print(f"  Desired position change: {position_change}, Max new position: {max_new_position}")
+            
+            if mispricing > 0:  # Underpriced - buy
+                # Buy signal - ensure at least 1 share if positive signal
+                quantity = max(1, min(position_change, max_new_position))
+                if self.cash < quantity * current_price:
+                    print(f"  Decision: HOLD (not enough cash)")
+                    action_type, quantity, price = 'hold', 0, None
+                else:    
+                    # Calculate buy price with tighter spread to facilitate matching
+                    price = current_price * (1 + np.random.uniform(0, 0.002))
+                    print(f"  Decision: BUY {quantity} at {price:.2f}")
+                    action_type, quantity, price = 'buy', quantity, price
                 
-                # Calculate sell price with tighter spread to facilitate matching
-                price = current_price * (1 - np.random.uniform(0, 0.002))
-                print(f"  Decision: SELL {quantity} at {price:.2f}")
-                return 'sell', quantity, price
-            else:
-                print(f"  Decision: HOLD (no shares to sell)")
-                return 'hold', 0, None 
+            else:  # Overpriced - sell
+                # Sell signal - ensure at least 1 share if negative signal and have shares
+                if self.position > 0:
+                    # More aggressive selling - willing to sell a larger portion of position
+                    quantity = max(1, min(abs(position_change), self.position))
+                    
+                    # Calculate sell price with tighter spread to facilitate matching
+                    price = current_price * (1 - np.random.uniform(0, 0.002))
+                    print(f"  Decision: SELL {quantity} at {price:.2f}")
+                    action_type, quantity, price = 'sell', quantity, price
+                else:
+                    print(f"  Decision: HOLD (no shares to sell)")
+                    action_type, quantity, price = 'hold', 0, None
+        
+        # Enhanced debugging log at the end to capture final decision
+        print(f"  FINAL DECISION: Action={action_type}, Quantity={quantity}, Price={price if price else 'N/A'}")
+        return action_type, quantity, price 

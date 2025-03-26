@@ -17,11 +17,11 @@ NUM_FUNDAMENTALISTS = 90  # Reduced from 100 to add noise traders
 NUM_CHARTISTS = 90  # Reduced from 100 to add noise traders
 NUM_NOISE_TRADERS = 20  # New noise traders for better liquidity
 INITIAL_WEALTH = 10000.0
-INITIAL_POSITION = 30  # Increased from 20 to give more shares to sell
+INITIAL_POSITION = 30  # Each agent starts with 30 shares to ensure they can sell if needed
 
 # Fundamentalist Parameters
 FUNDAMENTALIST_CONFIDENCE = 0.75  # Reduced from 0.8 to allow for more diverse estimates
-FUNDAMENTALIST_REACTION_SPEED = 0.4  # Increased from 0.3 for more aggressive trading
+FUNDAMENTALIST_REACTION_SPEED = 0.6  # Increased from 0.4 for significantly more aggressive trading
 
 # Chartist Parameters
 CHARTIST_MEMORY = 8  # Reduced from 10 to be even more responsive to recent trends

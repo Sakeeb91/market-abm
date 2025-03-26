@@ -170,39 +170,46 @@ def run_simulation(debug=False, steps=None, save_plots=True, show_plots=True):
     print(f"Sharpe ratio: {stats['returns']['sharpe']:.4f}")
     print(f"Average trading volume: {stats['volume']['mean']:.2f}")
     
-    # Display agent statistics with noise traders included
-    print("\n=== Agent Statistics ===")
-    print(f"Fundamentalists: Final wealth: {stats['agent_performance']['fundamentalist_final_wealth']:.2f}, " 
-          f"Final position: {stats['agent_performance'].get('fundamentalist_final_position', 'N/A')}")
-    print(f"Chartists: Final wealth: {stats['agent_performance']['chartist_final_wealth']:.2f}, "
-          f"Final position: {stats['agent_performance'].get('chartist_final_position', 'N/A')}")
+    if 'agent_performance' in stats:
+        print(f"Final fundamentalist wealth: {stats['agent_performance']['fundamentalist_final_wealth']:.2f}")
+        print(f"Final chartist wealth: {stats['agent_performance']['chartist_final_wealth']:.2f}")
+        if 'noise_trader_final_wealth' in stats['agent_performance']:
+            print(f"Final noise trader wealth: {stats['agent_performance']['noise_trader_final_wealth']:.2f}")
     
-    # Add noise trader statistics if they exist in the simulation
-    if 'noise_trader_final_wealth' in stats['agent_performance']:
-        print(f"Noise Traders: Final wealth: {stats['agent_performance']['noise_trader_final_wealth']:.2f}, "
-              f"Final position: {stats['agent_performance'].get('noise_trader_final_position', 'N/A')}")
+    # Verify position consistency
+    print("\n=== Position Verification ===")
+    # First, get the ground truth from agent objects
+    fund_position = 0
+    chart_position = 0
+    noise_position = 0
     
-    # Calculate and display trade participation statistics
-    if 'transactions' in simulation.market.stats and len(simulation.market.stats['transactions']) > 0:
-        print("\n=== Trading Activity ===")
-        fund_buys = sum(1 for t in simulation.market.stats['transactions'] if t[0].__class__.__name__ == 'Fundamentalist')
-        fund_sells = sum(1 for t in simulation.market.stats['transactions'] if t[1].__class__.__name__ == 'Fundamentalist')
-        chart_buys = sum(1 for t in simulation.market.stats['transactions'] if t[0].__class__.__name__ == 'Chartist')
-        chart_sells = sum(1 for t in simulation.market.stats['transactions'] if t[1].__class__.__name__ == 'Chartist')
-        noise_buys = sum(1 for t in simulation.market.stats['transactions'] if t[0].__class__.__name__ == 'NoiseTrader')
-        noise_sells = sum(1 for t in simulation.market.stats['transactions'] if t[1].__class__.__name__ == 'NoiseTrader')
-        
-        total_trades = len(simulation.market.stats['transactions'])
-        print(f"Total transactions: {total_trades}")
-        print(f"Fundamentalist participation: {(fund_buys + fund_sells) / (2 * total_trades) * 100:.1f}% " 
-              f"(Buy: {fund_buys}, Sell: {fund_sells})")
-        print(f"Chartist participation: {(chart_buys + chart_sells) / (2 * total_trades) * 100:.1f}% "
-              f"(Buy: {chart_buys}, Sell: {chart_sells})")
-        print(f"Noise trader participation: {(noise_buys + noise_sells) / (2 * total_trades) * 100:.1f}% "
-              f"(Buy: {noise_buys}, Sell: {noise_sells})")
+    for agent in simulation.market.agents:
+        if agent.__class__.__name__ == 'Fundamentalist':
+            fund_position += agent.position
+        elif agent.__class__.__name__ == 'Chartist':
+            chart_position += agent.position
+        elif agent.__class__.__name__ == 'NoiseTrader':
+            noise_position += agent.position
     
+    print("Ground truth positions from agent objects:")
+    print(f"Fundamentalists: {fund_position}")
+    print(f"Chartists: {chart_position}")
+    print(f"Noise traders: {noise_position}")
+    print(f"Total system shares: {fund_position + chart_position + noise_position}")
+    
+    # Then check sim_data values for the final step
+    if not sim_data.empty:
+        last_row = sim_data.iloc[-1]
+        print("\nPositions from simulation data (final step):")
+        print(f"Fundamentalists: {last_row['fundamentalist_total_position']}")
+        print(f"Chartists: {last_row['chartist_total_position']}")
+        if 'noise_trader_total_position' in last_row:
+            print(f"Noise traders: {last_row['noise_trader_total_position']}")
+        print(f"Total system shares: {last_row['total_system_position']}")
+    
+    print("\nSimulation completed successfully.")
     if save_plots:
-        print(f"\nResults saved to 'results/' directory with timestamp {timestamp}")
+        print(f"Results saved to 'results/' directory with timestamp {timestamp}")
     
     return simulation, sim_data, stats
 

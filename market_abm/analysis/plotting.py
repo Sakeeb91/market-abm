@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib.gridspec import GridSpec
+import pandas as pd
 
 
 def plot_price_history(sim_data, figsize=(12, 6), save_path=None):
@@ -349,7 +350,7 @@ def plot_summary_dashboard(sim_data, figsize=(15, 10), save_path=None):
     # Returns histogram
     ax5 = fig.add_subplot(gs[2, 2])
     if len(sim_data) > 1:  # Only if we have enough data
-        returns = sim_data['return'].dropna()
+        returns = sim_data['return'].dropna() if 'return' in sim_data.columns else pd.Series([])
         if len(returns) > 0:
             ax5.hist(returns, bins=30, color='green', alpha=0.7)
             ax5.set_title('Returns Distribution')
@@ -375,7 +376,7 @@ def plot_summary_dashboard(sim_data, figsize=(15, 10), save_path=None):
         total_volume = sim_data['volume'].sum()
         avg_volume = sim_data['volume'].mean()
         
-        # Calculate final positions for each agent type
+        # Calculate final positions for each agent type - Using the same data source as the plot
         fund_final = sim_data['fundamentalist_total_position'].iloc[-1]
         chart_final = sim_data['chartist_total_position'].iloc[-1]
         
@@ -388,6 +389,10 @@ def plot_summary_dashboard(sim_data, figsize=(15, 10), save_path=None):
         num_fund = sim_data['num_fundamentalists'].iloc[0] if 'num_fundamentalists' in sim_data.columns else 'N/A'
         num_chart = sim_data['num_chartists'].iloc[0] if 'num_chartists' in sim_data.columns else 'N/A'
         num_noise = sim_data['num_noise_traders'].iloc[0] if 'num_noise_traders' in sim_data.columns else 'N/A'
+        
+        # Add verification for total position
+        total_final = fund_final + chart_final + noise_final
+        total_system = sim_data['total_system_position'].iloc[-1] if 'total_system_position' in sim_data.columns else 0
         
         # Construct the statistics text
         stats_text = (
@@ -407,6 +412,7 @@ def plot_summary_dashboard(sim_data, figsize=(15, 10), save_path=None):
             f"Fundamentalists: {fund_final:.0f}\n"
             f"Chartists: {chart_final:.0f}\n"
             f"Noise Traders: {noise_final:.0f}\n"
+            f"Total: {total_final:.0f} (System: {total_system:.0f})\n"
         )
         
         # Add text to the figure

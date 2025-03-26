@@ -166,35 +166,29 @@ class SimulationEngine:
                     noise_trader_wealth += agent.wealth_history[-1]
                     noise_trader_position += agent.position
             
-            # Calculate both average and total metrics
-            if num_fundamentalists > 0:
-                data_row['fundamentalist_avg_wealth'] = fundamentalist_wealth / num_fundamentalists
-                data_row['fundamentalist_avg_position'] = fundamentalist_position / num_fundamentalists
-                data_row['fundamentalist_total_position'] = fundamentalist_position
-            else:
-                data_row['fundamentalist_avg_wealth'] = 0
-                data_row['fundamentalist_avg_position'] = 0
-                data_row['fundamentalist_total_position'] = 0
-                
-            if num_chartists > 0:
-                data_row['chartist_avg_wealth'] = chartist_wealth / num_chartists
-                data_row['chartist_avg_position'] = chartist_position / num_chartists
-                data_row['chartist_total_position'] = chartist_position
-            else:
-                data_row['chartist_avg_wealth'] = 0
-                data_row['chartist_avg_position'] = 0
-                data_row['chartist_total_position'] = 0
-                
-            if num_noise_traders > 0:
-                data_row['noise_trader_avg_wealth'] = noise_trader_wealth / num_noise_traders
-                data_row['noise_trader_avg_position'] = noise_trader_position / num_noise_traders
-                data_row['noise_trader_total_position'] = noise_trader_position
-            else:
-                data_row['noise_trader_avg_wealth'] = 0
-                data_row['noise_trader_avg_position'] = 0
-                data_row['noise_trader_total_position'] = 0
+            # Calculate averages
+            fundamentalist_avg_wealth = fundamentalist_wealth / num_fundamentalists if num_fundamentalists > 0 else 0
+            chartist_avg_wealth = chartist_wealth / num_chartists if num_chartists > 0 else 0
+            noise_trader_avg_wealth = noise_trader_wealth / num_noise_traders if num_noise_traders > 0 else 0
             
-            # Add total system position
+            fundamentalist_avg_position = fundamentalist_position / num_fundamentalists if num_fundamentalists > 0 else 0
+            chartist_avg_position = chartist_position / num_chartists if num_chartists > 0 else 0
+            noise_trader_avg_position = noise_trader_position / num_noise_traders if num_noise_traders > 0 else 0
+            
+            # Add to data row
+            data_row['fundamentalist_avg_wealth'] = fundamentalist_avg_wealth
+            data_row['chartist_avg_wealth'] = chartist_avg_wealth
+            data_row['noise_trader_avg_wealth'] = noise_trader_avg_wealth
+            
+            data_row['fundamentalist_avg_position'] = fundamentalist_avg_position
+            data_row['chartist_avg_position'] = chartist_avg_position
+            data_row['noise_trader_avg_position'] = noise_trader_avg_position
+            
+            data_row['fundamentalist_total_position'] = fundamentalist_position
+            data_row['chartist_total_position'] = chartist_position
+            data_row['noise_trader_total_position'] = noise_trader_position
+            
+            # Store the total shares in the system for validation
             data_row['total_system_position'] = fundamentalist_position + chartist_position + noise_trader_position
             
             # Calculate metrics
@@ -202,7 +196,7 @@ class SimulationEngine:
                 data_row['return'] = self.market.price_history[-1] / self.market.price_history[-2] - 1
             else:
                 data_row['return'] = 0
-                
+            
             # Store data row
             data.append(data_row)
             
@@ -246,28 +240,41 @@ class SimulationEngine:
                 print("2. Agents didn't have enough cash/shares")
                 print("3. Agent decision criteria weren't met")
             
-            # Calculate trade statistics
-            if len(self.market.stats['transactions']) > 0:
-                print("\nTrade statistics:")
-                # Count unique buyers and sellers
-                buyers = set(t[0].agent_id for t in self.market.stats['transactions'])
-                sellers = set(t[1].agent_id for t in self.market.stats['transactions'])
-                print(f"Unique buyers: {len(buyers)}")
-                print(f"Unique sellers: {len(sellers)}")
-                
-                # Count fundamentalist vs chartist trades
-                fund_buys = sum(1 for t in self.market.stats['transactions'] if t[0].__class__.__name__ == 'Fundamentalist')
-                fund_sells = sum(1 for t in self.market.stats['transactions'] if t[1].__class__.__name__ == 'Fundamentalist')
-                chart_buys = sum(1 for t in self.market.stats['transactions'] if t[0].__class__.__name__ == 'Chartist')
-                chart_sells = sum(1 for t in self.market.stats['transactions'] if t[1].__class__.__name__ == 'Chartist')
-                print(f"Fundamentalist buys: {fund_buys}, sells: {fund_sells}")
-                print(f"Chartist buys: {chart_buys}, sells: {chart_sells}")
+            # Add debug - Print final positions per agent type from raw data
+            print("\n=== POSITION VERIFICATION ===")
+            fund_position = 0
+            chart_position = 0
+            noise_position = 0
+            
+            for agent in self.market.agents:
+                if agent.__class__.__name__ == 'Fundamentalist':
+                    fund_position += agent.position
+                elif agent.__class__.__name__ == 'Chartist':
+                    chart_position += agent.position
+                elif agent.__class__.__name__ == 'NoiseTrader':
+                    noise_position += agent.position
+            
+            print("Ground truth positions from agent objects:")
+            print(f"Fundamentalists: {fund_position}")
+            print(f"Chartists: {chart_position}")
+            print(f"Noise traders: {noise_position}")
+            print(f"Total system shares: {fund_position + chart_position + noise_position}")
+            
+            print("\nPositions from DataFrame at last step:")
+            if not self.data.empty:
+                last_row = self.data.iloc[-1]
+                print(f"Fundamentalists: {last_row['fundamentalist_total_position']}")
+                print(f"Chartists: {last_row['chartist_total_position']}")
+                if 'noise_trader_total_position' in last_row:
+                    print(f"Noise traders: {last_row['noise_trader_total_position']}")
+                print(f"Total system shares: {last_row['total_system_position']}")
+            print("====================")
         
-        # Save data to CSV if requested
+        # Save data if required
         if save_data:
+            import os
+            os.makedirs(os.path.dirname(data_file), exist_ok=True)
             self.data.to_csv(data_file, index=False)
-            if verbose:
-                print(f"\nData saved to {data_file}")
         
         return self.data
     
